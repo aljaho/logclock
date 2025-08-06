@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Logarithmic log clock</title>
+<title>Logarithmic Log Clock</title>
 <style>
     body {
         margin: 0;
@@ -15,6 +15,7 @@
 </style>
 </head>
 <body>
+
 <canvas id="clock"></canvas>
 
 <script>
@@ -51,7 +52,7 @@ function drawScales(cx, cy, radius) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // Outer scale (1–60)
+    // Ulkokehä (1–60)
     for (let i = 1; i <= 60; i++) {
         const angle = Math.log(i) / Math.log(61) * 2 * Math.PI;
         const outerR = radius;
@@ -73,7 +74,7 @@ function drawScales(cx, cy, radius) {
         }
     }
 
-    // Inner scale (1–12)
+    // Sisäkehä (1–12)
     const innerScaleR = radius * 2/3;
     for (let h = 1; h <= 12; h++) {
         const angle = Math.log(h) / Math.log(13) * 2 * Math.PI;
@@ -93,7 +94,7 @@ function drawScales(cx, cy, radius) {
         ctx.fillStyle = "#c04000";
         ctx.fillText(h, tx, ty);
 
-        // Half-hour tick
+        // Puolitunti
         const halfHour = h + 0.5;
         const angleHalf = Math.log(halfHour) / Math.log(13) * 2 * Math.PI;
         const [hx1, hy1] = rotatePoint(cx, cy - outerR, cx, cy, angleHalf);
@@ -121,7 +122,7 @@ function drawHand(points, cx, cy, angle, color) {
 }
 
 const bgImage = new Image();
-bgImage.src = "log_cross-section.png"; // varmista että tiedosto on samassa kansiossa
+bgImage.src = "log_cross-section.png";
 
 function drawClock() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -130,14 +131,13 @@ function drawClock() {
     const cy = canvas.height / 2;
     const radius = Math.min(canvas.width, canvas.height) * 0.4;
 
-    // Draw background image fully opaque
+    // Taustakuva sellaisenaan
     if (bgImage.complete) {
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
         ctx.clip();
 
-        ctx.globalAlpha = 1.0;
         ctx.imageSmoothingEnabled = true;
 
         const imgRatio = bgImage.width / bgImage.height;
@@ -159,7 +159,7 @@ function drawClock() {
         ctx.restore();
     }
 
-    // Clock circles
+    // Kellon kehät
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
     ctx.lineWidth = 2;
