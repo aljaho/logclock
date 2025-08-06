@@ -28,7 +28,6 @@ function resizeCanvas() {
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-// Rotate a point around a center
 function rotatePoint(x, y, cx, cy, angle) {
     const dx = x - cx;
     const dy = y - cy;
@@ -37,7 +36,6 @@ function rotatePoint(x, y, cx, cy, angle) {
     return [cx + rx, cy + ry];
 }
 
-// Rotate a polygon around a center
 function rotatePolygon(points, cx, cy, angle) {
     const rotated = [];
     for (let i = 0; i < points.length; i += 2) {
@@ -47,14 +45,13 @@ function rotatePolygon(points, cx, cy, angle) {
     return rotated;
 }
 
-// Draw the outer and inner scales
 function drawScales(cx, cy, radius) {
     ctx.lineCap = "round";
     ctx.font = `${radius*0.06}px Arial`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // Outer scale (1–60)
+    // Outer scale
     for (let i = 1; i <= 60; i++) {
         const angle = Math.log(i) / Math.log(61) * 2 * Math.PI;
         const outerR = radius;
@@ -76,7 +73,7 @@ function drawScales(cx, cy, radius) {
         }
     }
 
-    // Inner scale (1–12)
+    // Inner scale
     const innerScaleR = radius * 2/3;
     for (let h = 1; h <= 12; h++) {
         const angle = Math.log(h) / Math.log(13) * 2 * Math.PI;
@@ -109,7 +106,6 @@ function drawScales(cx, cy, radius) {
     }
 }
 
-// Draw a clock hand
 function drawHand(points, cx, cy, angle, color) {
     const rotated = rotatePolygon(points, cx, cy, angle);
     ctx.beginPath();
@@ -124,17 +120,8 @@ function drawHand(points, cx, cy, angle, color) {
     ctx.stroke();
 }
 
-// Load background image
 const bgImage = new Image();
 bgImage.src = "log_cross-section.png";
-let bgImageLoaded = false;
-
-bgImage.onload = () => {
-    bgImageLoaded = true;
-};
-
-// Background transparency setting (0 = fully transparent, 1 = fully opaque)
-const bgTransparency = 0.3;
 
 function drawClock() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -143,14 +130,12 @@ function drawClock() {
     const cy = canvas.height / 2;
     const radius = Math.min(canvas.width, canvas.height) * 0.4;
 
-    // Draw background image inside a circle with transparency
-    if (bgImageLoaded) {
+    // Background image without transparency
+    if (bgImage.complete) {
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
         ctx.clip();
-
-        ctx.globalAlpha = bgTransparency;
 
         const imgRatio = bgImage.width / bgImage.height;
         const targetDiameter = radius * 2;
@@ -169,11 +154,10 @@ function drawClock() {
 
         ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
 
-        ctx.globalAlpha = 1.0;
         ctx.restore();
     }
 
-    // Clock circles
+    // Circles
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
     ctx.lineWidth = 2;
@@ -185,10 +169,8 @@ function drawClock() {
     ctx.strokeStyle = "#c04000";
     ctx.stroke();
 
-    // Draw scales
     drawScales(cx, cy, radius);
 
-    // Hand shapes
     const secShape = [cx, cy, cx, cy - radius*0.965];
     const minShape = [
         cx, cy + radius*0.03,
@@ -205,19 +187,16 @@ function drawClock() {
 
     const now = new Date();
 
-    // Seconds (log scale correction)
     let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
     let seconds = rawSeconds < 1 ? rawSeconds + 60 : rawSeconds;
     const secAngle = Math.log(seconds) / Math.log(61) * 2 * Math.PI;
     drawHand(secShape, cx, cy, secAngle, "black");
 
-    // Minutes
     let rawMinutes = now.getMinutes() + rawSeconds / 60;
     let minutes = rawMinutes < 1 ? rawMinutes + 60 : rawMinutes;
     const minAngle = Math.log(minutes) / Math.log(61) * 2 * Math.PI;
     drawHand(minShape, cx, cy, minAngle, "black");
 
-    // Hours
     let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
     let hours = hoursRaw < 1 ? hoursRaw + 12 : hoursRaw;
     const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI;
