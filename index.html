@@ -8,20 +8,55 @@
         margin: 0;
         background: white;
         overflow: hidden;
+        font-family: Arial, sans-serif;
     }
     canvas {
         display: block;
     }
+    #opacityControl {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: rgba(255,255,255,0.8);
+        padding: 8px 12px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        z-index: 10;
+    }
+    #opacityControl label {
+        font-size: 14px;
+    }
+    #opacityControl input {
+        vertical-align: middle;
+    }
+    #opacityValue {
+        font-weight: bold;
+    }
 </style>
 </head>
 <body>
+<div id="opacityControl">
+    <label>
+        Taustakuvan läpinäkyvyys:
+        <input type="range" id="opacitySlider" min="0" max="100" value="65">
+        <span id="opacityValue">65%</span>
+    </label>
+</div>
+
 <canvas id="clock"></canvas>
 
 <script>
 const canvas = document.getElementById("clock");
 const ctx = canvas.getContext("2d");
 
-const BACKGROUND_OPACITY = 0.3; // Läpinäkyvyys 0.0–1.0
+let BACKGROUND_OPACITY = 0.65; // Alkuarvo (0.0–1.0)
+
+const slider = document.getElementById("opacitySlider");
+const valueDisplay = document.getElementById("opacityValue");
+slider.addEventListener("input", () => {
+    BACKGROUND_OPACITY = slider.value / 100;
+    valueDisplay.textContent = `${slider.value}%`;
+});
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -161,7 +196,7 @@ function drawClock() {
         ctx.restore();
     }
 
-    ctx.globalAlpha = 1.0; // Palautetaan piirto täysin näkyväksi
+    ctx.globalAlpha = 1.0; // Palautetaan piirto normaaliksi
 
     // Kellon kehät
     ctx.beginPath();
@@ -215,4 +250,3 @@ drawClock();
 </script>
 </body>
 </html>
-
