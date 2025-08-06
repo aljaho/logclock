@@ -29,15 +29,6 @@ const chimeSounds = [
 // Lataa Audio-objektit
 const chimes = chimeSounds.map(src => new Audio(src));
 
-// Soittaa yhden äänen ja palauttaa lupauksen kun ääni loppuu
-function playSound(audio) {
-  return new Promise(resolve => {
-    audio.currentTime = 0;
-    audio.play();
-    audio.onended = resolve;
-  });
-}
-
 window.addEventListener("load", () => {
     playChimes(5); // Soitetaan viisi satunnaista ääntä
 });
@@ -169,4 +160,5 @@ drawClock();
 </script>
 </body>
 </html>
+
 
