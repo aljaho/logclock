@@ -123,8 +123,6 @@ function drawHand(points, cx, cy, angle, color) {
 const bgImage = new Image();
 bgImage.src = "log_cross-section.png";
 
-const bgTransparency = 0.1;
-    
 function drawClock() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -139,8 +137,6 @@ function drawClock() {
         ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
         ctx.clip();
 
-        ctx.globalAlpha = bgTransparency;
-        
         const imgRatio = bgImage.width / bgImage.height;
         const targetDiameter = radius * 2;
         let drawWidth, drawHeight;
@@ -158,7 +154,6 @@ function drawClock() {
 
         ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
 
-        ctx.globalAlpha = 1.0;
         ctx.restore();
     }
 
@@ -214,6 +209,3 @@ drawClock();
 </script>
 </body>
 </html>
-
-
-
