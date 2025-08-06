@@ -51,7 +51,7 @@ function drawScales(cx, cy, radius) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // Outer scale
+    // Outer scale (1–60)
     for (let i = 1; i <= 60; i++) {
         const angle = Math.log(i) / Math.log(61) * 2 * Math.PI;
         const outerR = radius;
@@ -73,7 +73,7 @@ function drawScales(cx, cy, radius) {
         }
     }
 
-    // Inner scale
+    // Inner scale (1–12)
     const innerScaleR = radius * 2/3;
     for (let h = 1; h <= 12; h++) {
         const angle = Math.log(h) / Math.log(13) * 2 * Math.PI;
@@ -121,7 +121,7 @@ function drawHand(points, cx, cy, angle, color) {
 }
 
 const bgImage = new Image();
-bgImage.src = "log_cross-section.png";
+bgImage.src = "log_cross-section.png"; // varmista että tiedosto on samassa kansiossa
 
 function drawClock() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -130,12 +130,15 @@ function drawClock() {
     const cy = canvas.height / 2;
     const radius = Math.min(canvas.width, canvas.height) * 0.4;
 
-    // Background image without transparency
+    // Draw background image fully opaque
     if (bgImage.complete) {
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
         ctx.clip();
+
+        ctx.globalAlpha = 1.0;
+        ctx.imageSmoothingEnabled = true;
 
         const imgRatio = bgImage.width / bgImage.height;
         const targetDiameter = radius * 2;
@@ -153,11 +156,10 @@ function drawClock() {
         const dy = cy - drawHeight / 2;
 
         ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
-
         ctx.restore();
     }
 
-    // Circles
+    // Clock circles
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
     ctx.lineWidth = 2;
