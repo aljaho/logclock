@@ -38,6 +38,10 @@ function playSound(audio) {
   });
 }
 
+window.addEventListener("load", () => {
+    playChimes(5); // Soitetaan viisi satunnaista ääntä
+});
+  
 // Soita ääni satunnaisesti valitusta äänilistasta
 function getRandomChime() {
   return chimes[Math.floor(Math.random() * chimes.length)];
@@ -165,3 +169,4 @@ drawClock();
 </script>
 </body>
 </html>
+
