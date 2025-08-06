@@ -127,6 +127,11 @@ function drawHand(points, cx, cy, angle, color) {
 // Load background image
 const bgImage = new Image();
 bgImage.src = "log_cross-section.png";
+let bgImageLoaded = false;
+
+bgImage.onload = () => {
+    bgImageLoaded = true;
+};
 
 // Background transparency setting (0 = fully transparent, 1 = fully opaque)
 const bgTransparency = 0.3;
@@ -139,13 +144,13 @@ function drawClock() {
     const radius = Math.min(canvas.width, canvas.height) * 0.4;
 
     // Draw background image inside a circle with transparency
-    if (bgImage.complete) {
+    if (bgImageLoaded) {
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
         ctx.clip();
 
-        ctx.globalAlpha = bgTransparency; // Apply transparency
+        ctx.globalAlpha = bgTransparency;
 
         const imgRatio = bgImage.width / bgImage.height;
         const targetDiameter = radius * 2;
@@ -164,7 +169,7 @@ function drawClock() {
 
         ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
 
-        ctx.globalAlpha = 1.0; // Reset alpha to normal
+        ctx.globalAlpha = 1.0;
         ctx.restore();
     }
 
