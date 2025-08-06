@@ -1,164 +1,214 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Äänikello</title>
+<title>Logarithmic Log Clock</title>
 <style>
-  body {
-    margin: 0;
-    background: white;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-  }
-  canvas {
-    display: block;
-  }
+    body {
+        margin: 0;
+        background: white;
+        overflow: hidden;
+    }
+    canvas {
+        display: block;
+    }
 </style>
 </head>
 <body>
+
 <canvas id="clock"></canvas>
 
 <script>
-// Lista äänitiedostoista (samanlaisia ääniä, esim. chime1.mp3, chime2.mp3, chime3.mp3)
-const chimeSounds = [
-  "sounds/chime1.mp3",
-  "sounds/chime2.mp3",
-  "sounds/chime3.mp3"
-];
-
-// Lataa Audio-objektit
-const chimes = chimeSounds.map(src => new Audio(src));
-
-window.addEventListener("load", () => {
-    playChimes(5); // Soitetaan viisi satunnaista ääntä
-});
-  
-// Soita ääni satunnaisesti valitusta äänilistasta
-function getRandomChime() {
-  return chimes[Math.floor(Math.random() * chimes.length)];
-}
-
-// Soita ääni useita kertoja peräkkäin (odottaa aina, että ääni loppuu)
-async function playChimes(count) {
-  for (let i = 0; i < count; i++) {
-    const sound = getRandomChime();
-    await playSound(sound);
-  }
-}
-
-// Viimeksi soitettu tunnin ja puolitunnin tarkistus, jotta ei soiteta sama uudelleen
-let lastPlayedHour = null;
-let lastPlayedHalfHour = null;
-
-function checkAndPlayChimes() {
-  const now = new Date();
-  const hour = now.getHours();
-  const minute = now.getMinutes();
-  const second = now.getSeconds();
-
-  // Tasatunti
-  if (minute === 0 && second === 0) {
-    if (lastPlayedHour !== hour) {
-      lastPlayedHour = hour;
-      lastPlayedHalfHour = null; // Nollaa puolitunnin soittomahdollisuus uudelle puolikkaalle
-      // 12-tunnin muoto, 0 => 12
-      const chimeCount = hour % 12 === 0 ? 12 : hour % 12;
-      playChimes(chimeCount);
-    }
-  }
-  // Puolitunti
-  else if (minute === 30 && second === 0) {
-    if (lastPlayedHalfHour !== hour) {
-      lastPlayedHalfHour = hour;
-      lastPlayedHour = null; // Nollaa tunnin soittomahdollisuus uudelle tunnille
-      playChimes(1);
-    }
-  }
-}
-
-// Tarkistus joka sekunti
-setInterval(checkAndPlayChimes, 1000);
-
-// --- Kellon piirto ---
-
 const canvas = document.getElementById("clock");
 const ctx = canvas.getContext("2d");
 
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
+function rotatePoint(x, y, cx, cy, angle) {
+    const dx = x - cx;
+    const dy = y - cy;
+    const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+    const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
+    return [cx + rx, cy + ry];
+}
+
+function rotatePolygon(points, cx, cy, angle) {
+    const rotated = [];
+    for (let i = 0; i < points.length; i += 2) {
+        const [x, y] = rotatePoint(points[i], points[i+1], cx, cy, angle);
+        rotated.push(x, y);
+    }
+    return rotated;
+}
+
+function drawScales(cx, cy, radius) {
+    ctx.lineCap = "round";
+    ctx.font = `${radius*0.06}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Ulkokehä (1–60)
+    for (let i = 1; i <= 60; i++) {
+        const angle = Math.log(i) / Math.log(61) * 2 * Math.PI;
+        const outerR = radius;
+        const innerR = radius - radius * 0.07;
+
+        ctx.beginPath();
+        const [x1, y1] = rotatePoint(cx, cy - outerR, cx, cy, angle);
+        const [x2, y2] = rotatePoint(cx, cy - innerR, cx, cy, angle);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineWidth = (i % 5 === 0 || i < 5) ? 2.5 : 1;
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+
+        if (i !== 60 && (i % 5 === 0 || i < 5)) {
+            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius*0.13), cx, cy, angle);
+            ctx.fillStyle = "black";
+            ctx.fillText(i, tx, ty);
+        }
+    }
+
+    // Sisäkehä (1–12)
+    const innerScaleR = radius * 2/3;
+    for (let h = 1; h <= 12; h++) {
+        const angle = Math.log(h) / Math.log(13) * 2 * Math.PI;
+        const outerR = innerScaleR;
+        const innerR = innerScaleR - innerScaleR * 0.07;
+
+        ctx.beginPath();
+        const [x1, y1] = rotatePoint(cx, cy - outerR, cx, cy, angle);
+        const [x2, y2] = rotatePoint(cx, cy - innerR, cx, cy, angle);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = "#c04000";
+        ctx.stroke();
+
+        const [tx, ty] = rotatePoint(cx, cy - (outerR + radius*0.06), cx, cy, angle);
+        ctx.fillStyle = "#c04000";
+        ctx.fillText(h, tx, ty);
+
+        // Puolitunti
+        const halfHour = h + 0.5;
+        const angleHalf = Math.log(halfHour) / Math.log(13) * 2 * Math.PI;
+        const [hx1, hy1] = rotatePoint(cx, cy - outerR, cx, cy, angleHalf);
+        const [hx2, hy2] = rotatePoint(cx, cy - innerR, cx, cy, angleHalf);
+        ctx.beginPath();
+        ctx.moveTo(hx1, hy1);
+        ctx.lineTo(hx2, hy2);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+}
+
+function drawHand(points, cx, cy, angle, color) {
+    const rotated = rotatePolygon(points, cx, cy, angle);
+    ctx.beginPath();
+    ctx.moveTo(rotated[0], rotated[1]);
+    for (let i = 2; i < rotated.length; i += 2) {
+        ctx.lineTo(rotated[i], rotated[i+1]);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.fill();
+    ctx.stroke();
+}
+
+const bgImage = new Image();
+bgImage.src = "log_cross-section.png";
+
 function drawClock() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  const radius = Math.min(cx, cy) * 0.8;
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const radius = Math.min(canvas.width, canvas.height) * 0.4;
 
-  // Kellotausta
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-  ctx.fillStyle = "#f0f0f0";
-  ctx.fill();
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = "#333";
-  ctx.stroke();
+    // Taustakuva sellaisenaan
+    if (bgImage.complete) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+        ctx.clip();
 
-  // Kellon numerot (1-12)
-  ctx.fillStyle = "#000";
-  ctx.font = `${radius * 0.12}px Arial`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  for (let num = 1; num <= 12; num++) {
-    const angle = (num - 3) * (Math.PI * 2) / 12; // 12 kohdalla ylhäällä
-    const x = cx + Math.cos(angle) * radius * 0.75;
-    const y = cy + Math.sin(angle) * radius * 0.75;
-    ctx.fillText(num.toString(), x, y);
-  }
+        ctx.imageSmoothingEnabled = true;
 
-  // Viisarit
-  const now = new Date();
-  const hour = now.getHours() % 12;
-  const minute = now.getMinutes();
-  const second = now.getSeconds();
+        const imgRatio = bgImage.width / bgImage.height;
+        const targetDiameter = radius * 2;
+        let drawWidth, drawHeight;
 
-  // Tunnin viisari
-  const hourAngle = ((hour + minute / 60) * 30 - 90) * Math.PI / 180;
-  ctx.beginPath();
-  ctx.lineWidth = 6;
-  ctx.lineCap = "round";
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + Math.cos(hourAngle) * radius * 0.5, cy + Math.sin(hourAngle) * radius * 0.5);
-  ctx.stroke();
+        if (imgRatio > 1) {
+            drawHeight = targetDiameter;
+            drawWidth = targetDiameter * imgRatio;
+        } else {
+            drawWidth = targetDiameter;
+            drawHeight = targetDiameter / imgRatio;
+        }
 
-  // Minuutin viisari
-  const minuteAngle = (minute * 6 - 90) * Math.PI / 180;
-  ctx.beginPath();
-  ctx.lineWidth = 4;
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + Math.cos(minuteAngle) * radius * 0.75, cy + Math.sin(minuteAngle) * radius * 0.75);
-  ctx.stroke();
+        const dx = cx - drawWidth / 2;
+        const dy = cy - drawHeight / 2;
 
-  // Sekuntiviisari
-  const secondAngle = (second * 6 - 90) * Math.PI / 180;
-  ctx.beginPath();
-  ctx.strokeStyle = "red";
-  ctx.lineWidth = 2;
-  ctx.moveTo(cx, cy);
-  ctx.lineTo(cx + Math.cos(secondAngle) * radius * 0.85, cy + Math.sin(secondAngle) * radius * 0.85);
-  ctx.stroke();
-  ctx.strokeStyle = "#333"; // Palauta väri
+        ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
+        ctx.restore();
+    }
 
-  requestAnimationFrame(drawClock);
+    // Kellon kehät
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 2/3 * 0.93, 0, 2 * Math.PI);
+    ctx.strokeStyle = "#c04000";
+    ctx.stroke();
+
+    drawScales(cx, cy, radius);
+
+    const secShape = [cx, cy, cx, cy - radius*0.965];
+    const minShape = [
+        cx, cy + radius*0.03,
+        cx + radius*0.03, cy,
+        cx, cy - radius*0.965,
+        cx - radius*0.03, cy
+    ];
+    const hourShape = [
+        cx, cy + radius*0.03,
+        cx + radius*0.03, cy,
+        cx, cy - radius*2/3 * 0.93,
+        cx - radius*0.03, cy
+    ];
+
+    const now = new Date();
+
+    let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
+    let seconds = rawSeconds < 1 ? rawSeconds + 60 : rawSeconds;
+    const secAngle = Math.log(seconds) / Math.log(61) * 2 * Math.PI;
+    drawHand(secShape, cx, cy, secAngle, "black");
+
+    let rawMinutes = now.getMinutes() + rawSeconds / 60;
+    let minutes = rawMinutes < 1 ? rawMinutes + 60 : rawMinutes;
+    const minAngle = Math.log(minutes) / Math.log(61) * 2 * Math.PI;
+    drawHand(minShape, cx, cy, minAngle, "black");
+
+    let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
+    let hours = hoursRaw < 1 ? hoursRaw + 12 : hoursRaw;
+    const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI;
+    drawHand(hourShape, cx, cy, hourAngle, "#c04000");
+
+    requestAnimationFrame(drawClock);
 }
 
 drawClock();
-
 </script>
 </body>
 </html>
-
 
