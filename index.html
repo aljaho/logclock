@@ -1,131 +1,213 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Äänikello</title>
+<title>Logarithmic Log Clock</title>
 <style>
-  body {
-    margin: 0;
-    background: white;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-  }
-  canvas {
-    display: block;
-  }
+    body {
+        margin: 0;
+        background: white;
+        overflow: hidden;
+    }
+    canvas {
+        display: block;
+    }
 </style>
 </head>
 <body>
+
 <canvas id="clock"></canvas>
 
 <script>
-// Perusäänet: Lisää tähän äänitiedostojen polut
-const chimeSounds = [
-  "sounds/chime1.mp3",
-  "sounds/chime2.mp3",
-  "sounds/chime3.mp3"
-];
-
-const halfChimeSounds = [
-  "sounds/halfchime1.mp3",
-  "sounds/halfchime2.mp3"
-];
-
-// Luo Audio-objektit äänistä
-function loadAudioArray(sources) {
-  return sources.map(src => new Audio(src));
-}
-
-const chimes = loadAudioArray(chimeSounds);
-const halfChimes = loadAudioArray(halfChimeSounds);
-
-// Soittaa yhden äänen ja palauttaa lupauksen kun ääni loppuu
-function playSound(audio) {
-  return new Promise(resolve => {
-    audio.currentTime = 0;
-    audio.play();
-    audio.onended = resolve;
-  });
-}
-
-// Soita useita kertoja peräkkäin, odottaen että jokainen ääni loppuu
-async function playMultipleSounds(audioArray, count) {
-  for (let i = 0; i < count; i++) {
-    // Valitse satunnainen ääni
-    const sound = audioArray[Math.floor(Math.random() * audioArray.length)];
-    await playSound(sound);
-  }
-}
-
-// Tallenna viimeisin soitettu tunti, jotta ei soita samaa ääntä uudelleen samassa tunnissa
-let lastPlayedHour = null;
-// Ja puolitunnin soitto samaan tapaan
-let lastPlayedHalfHour = null;
-
-function checkAndPlayChimes() {
-  const now = new Date();
-  const h = now.getHours() % 12 || 12; // 12-tunnin muoto (0 -> 12)
-  const m = now.getMinutes();
-  const s = now.getSeconds();
-
-  if (m === 0 && s === 0) {
-    // Tasatunti
-    if (lastPlayedHour !== now.getHours()) {
-      lastPlayedHour = now.getHours();
-      playMultipleSounds(chimes, h);
-    }
-  } else if (m === 30 && s === 0) {
-    // Puolitunti
-    if (lastPlayedHalfHour !== now.getHours() * 60 + 30) {
-      lastPlayedHalfHour = now.getHours() * 60 + 30;
-      // Soitetaan yksi satunnainen puolitunnin ääni
-      const sound = halfChimes[Math.floor(Math.random() * halfChimes.length)];
-      playSound(sound);
-    }
-  }
-}
-
-// Päivitä ja tarkista äänet sekunnin välein
-setInterval(checkAndPlayChimes, 1000);
-
-
-// --- Kello jatkuu tässä ---
-
 const canvas = document.getElementById("clock");
 const ctx = canvas.getContext("2d");
 
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 }
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-// Piirrä kello (voit lisätä tähän koodisi kellon piirtämiseen)
-function drawClock() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  const radius = Math.min(cx, cy) * 0.8;
-  
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-  ctx.fillStyle = "#f0f0f0";
-  ctx.fill();
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = "#333";
-  ctx.stroke();
-  
-  // Lisää kellon numerot jne. halutessasi
+function rotatePoint(x, y, cx, cy, angle) {
+    const dx = x - cx;
+    const dy = y - cy;
+    const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+    const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
+    return [cx + rx, cy + ry];
+}
 
-  // Piirrä kelloajan viisarit (voit lisätä koodisi tähän)
-  
-  requestAnimationFrame(drawClock);
+function rotatePolygon(points, cx, cy, angle) {
+    const rotated = [];
+    for (let i = 0; i < points.length; i += 2) {
+        const [x, y] = rotatePoint(points[i], points[i+1], cx, cy, angle);
+        rotated.push(x, y);
+    }
+    return rotated;
+}
+
+function drawScales(cx, cy, radius) {
+    ctx.lineCap = "round";
+    ctx.font = `${radius*0.06}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Ulkokehä (1–60)
+    for (let i = 1; i <= 60; i++) {
+        const angle = Math.log(i) / Math.log(61) * 2 * Math.PI;
+        const outerR = radius;
+        const innerR = radius - radius * 0.07;
+
+        ctx.beginPath();
+        const [x1, y1] = rotatePoint(cx, cy - outerR, cx, cy, angle);
+        const [x2, y2] = rotatePoint(cx, cy - innerR, cx, cy, angle);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineWidth = (i % 5 === 0 || i < 5) ? 2.5 : 1;
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+
+        if (i !== 60 && (i % 5 === 0 || i < 5)) {
+            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius*0.13), cx, cy, angle);
+            ctx.fillStyle = "black";
+            ctx.fillText(i, tx, ty);
+        }
+    }
+
+    // Sisäkehä (1–12)
+    const innerScaleR = radius * 2/3;
+    for (let h = 1; h <= 12; h++) {
+        const angle = Math.log(h) / Math.log(13) * 2 * Math.PI;
+        const outerR = innerScaleR;
+        const innerR = innerScaleR - innerScaleR * 0.07;
+
+        ctx.beginPath();
+        const [x1, y1] = rotatePoint(cx, cy - outerR, cx, cy, angle);
+        const [x2, y2] = rotatePoint(cx, cy - innerR, cx, cy, angle);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = "#c04000";
+        ctx.stroke();
+
+        const [tx, ty] = rotatePoint(cx, cy - (outerR + radius*0.06), cx, cy, angle);
+        ctx.fillStyle = "#c04000";
+        ctx.fillText(h, tx, ty);
+
+        // Puolitunti
+        const halfHour = h + 0.5;
+        const angleHalf = Math.log(halfHour) / Math.log(13) * 2 * Math.PI;
+        const [hx1, hy1] = rotatePoint(cx, cy - outerR, cx, cy, angleHalf);
+        const [hx2, hy2] = rotatePoint(cx, cy - innerR, cx, cy, angleHalf);
+        ctx.beginPath();
+        ctx.moveTo(hx1, hy1);
+        ctx.lineTo(hx2, hy2);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+}
+
+function drawHand(points, cx, cy, angle, color) {
+    const rotated = rotatePolygon(points, cx, cy, angle);
+    ctx.beginPath();
+    ctx.moveTo(rotated[0], rotated[1]);
+    for (let i = 2; i < rotated.length; i += 2) {
+        ctx.lineTo(rotated[i], rotated[i+1]);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.fill();
+    ctx.stroke();
+}
+
+const bgImage = new Image();
+bgImage.src = "log_cross-section.png";
+
+function drawClock() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const radius = Math.min(canvas.width, canvas.height) * 0.4;
+
+    // Taustakuva sellaisenaan
+    if (bgImage.complete) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+        ctx.clip();
+
+        ctx.imageSmoothingEnabled = true;
+
+        const imgRatio = bgImage.width / bgImage.height;
+        const targetDiameter = radius * 2;
+        let drawWidth, drawHeight;
+
+        if (imgRatio > 1) {
+            drawHeight = targetDiameter;
+            drawWidth = targetDiameter * imgRatio;
+        } else {
+            drawWidth = targetDiameter;
+            drawHeight = targetDiameter / imgRatio;
+        }
+
+        const dx = cx - drawWidth / 2;
+        const dy = cy - drawHeight / 2;
+
+        ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
+        ctx.restore();
+    }
+
+    // Kellon kehät
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius * 2/3 * 0.93, 0, 2 * Math.PI);
+    ctx.strokeStyle = "#c04000";
+    ctx.stroke();
+
+    drawScales(cx, cy, radius);
+
+    const secShape = [cx, cy, cx, cy - radius*0.965];
+    const minShape = [
+        cx, cy + radius*0.03,
+        cx + radius*0.03, cy,
+        cx, cy - radius*0.965,
+        cx - radius*0.03, cy
+    ];
+    const hourShape = [
+        cx, cy + radius*0.03,
+        cx + radius*0.03, cy,
+        cx, cy - radius*2/3 * 0.93,
+        cx - radius*0.03, cy
+    ];
+
+    const now = new Date();
+
+    let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
+    let seconds = rawSeconds < 1 ? rawSeconds + 60 : rawSeconds;
+    const secAngle = Math.log(seconds) / Math.log(61) * 2 * Math.PI;
+    drawHand(secShape, cx, cy, secAngle, "black");
+
+    let rawMinutes = now.getMinutes() + rawSeconds / 60;
+    let minutes = rawMinutes < 1 ? rawMinutes + 60 : rawMinutes;
+    const minAngle = Math.log(minutes) / Math.log(61) * 2 * Math.PI;
+    drawHand(minShape, cx, cy, minAngle, "black");
+
+    let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
+    let hours = hoursRaw < 1 ? hoursRaw + 12 : hoursRaw;
+    const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI;
+    drawHand(hourShape, cx, cy, hourAngle, "#c04000");
+
+    requestAnimationFrame(drawClock);
 }
 
 drawClock();
-
 </script>
 </body>
 </html>
