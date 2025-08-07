@@ -202,12 +202,7 @@ function drawClock() {
         cx - radius*0.03, cy
     ];
 
-//    const now = new Date();
-const now = new Date(0); // Luo uusi Date-olio
-now.setHours(7);         // Aseta tunnit (esim. 10)
-now.setMinutes(1);       // Aseta minuutit (esim. 30)
-now.setSeconds(0);        // Aseta sekunnit (esim. 0)
-now.setMilliseconds(0);   // Aseta millisekunnit (ei pakollinen)
+    const now = new Date();
     
     let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
     let seconds = rawSeconds < 1 ? rawSeconds + 60 : rawSeconds;
@@ -238,6 +233,7 @@ drawClock();
 </script>
 </body>
 </html>
+
 
 
 
