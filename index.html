@@ -65,26 +65,26 @@ function drawScales(cx, cy, radius) {
         ctx.lineTo(x2, y2);
         ctx.lineWidth = (i % 5 === 0 || i < 5) ? 2.5 : 1;
 
-        ctx.fillStyle = "#f4e3cb";
+//        ctx.fillStyle = "#f4e3cb";
         
-        ctx.fillText(h, tx-3, ty);
-        ctx.fillText(h, tx, ty-3);
-        ctx.fillText(h, tx+3, ty);
-        ctx.fillText(h, tx, ty+3);
-        ctx.fillText(h, tx-6, ty);
-        ctx.fillText(h, tx, ty-6);
-        ctx.fillText(h, tx+6, ty);
-        ctx.fillText(h, tx, ty+6);
-        ctx.fillText(h, tx-4.25, ty-4.25);
-        ctx.fillText(h, tx-4.25, ty+4.25);
-        ctx.fillText(h, tx+4.25, ty+4.25);
-        ctx.fillText(h, tx+4.25, ty-4.25);
+//        ctx.fillText(h, tx-3, ty);
+//        ctx.fillText(h, tx, ty-3);
+//        ctx.fillText(h, tx+3, ty);
+//        ctx.fillText(h, tx, ty+3);
+//        ctx.fillText(h, tx-6, ty);
+//        ctx.fillText(h, tx, ty-6);
+//        ctx.fillText(h, tx+6, ty);
+//        ctx.fillText(h, tx, ty+6);
+//        ctx.fillText(h, tx-4.25, ty-4.25);
+//        ctx.fillText(h, tx-4.25, ty+4.25);
+//        ctx.fillText(h, tx+4.25, ty+4.25);
+//        ctx.fillText(h, tx+4.25, ty-4.25);
         
-//        ctx.strokeStyle = "black";
-//        ctx.stroke();
+        ctx.strokeStyle = "black";
+        ctx.stroke();
 
-        ctx.fillStyle = "black";
-        ctx.fillText(h,tx,ty);
+//        ctx.fillStyle = "black";
+//        ctx.fillText(h,tx,ty);
         
         if (i !== 60 && (i % 5 === 0 || i < 5)) {
             const [tx, ty] = rotatePoint(cx, cy - (outerR - radius*0.13), cx, cy, angle);
@@ -248,6 +248,7 @@ drawClock();
 </script>
 </body>
 </html>
+
 
 
 
