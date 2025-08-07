@@ -64,12 +64,12 @@ function drawScales(cx, cy, radius) {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.lineWidth = (i % 5 === 0 || i < 5) ? 2.5 : 1;
-        ctx.strokeStyle = "#5c4033";
+        ctx.strokeStyle = "black";
         ctx.stroke();
 
         if (i !== 60 && (i % 5 === 0 || i < 5)) {
             const [tx, ty] = rotatePoint(cx, cy - (outerR - radius*0.13), cx, cy, angle);
-            ctx.fillStyle = "5c4033";
+            ctx.fillStyle = "black";
             ctx.fillText(i, tx, ty);
         }
     }
@@ -162,8 +162,8 @@ function drawClock() {
     // Kellon kehät
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "black";
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#5c4033";
     ctx.stroke();
 
     ctx.beginPath();
@@ -211,6 +211,7 @@ drawClock();
 </script>
 </body>
 </html>
+
 
 
 
