@@ -181,7 +181,7 @@ function drawClock() {
 
     // Clock circles
     ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, radius+6, 0, 2 * Math.PI);
     ctx.lineWidth = 16;
     ctx.strokeStyle = "#5c4033";
     ctx.stroke();
@@ -234,5 +234,6 @@ drawClock();
 </script>
 </body>
 </html>
+
 
 
