@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Logarithmic Log Clock</title>
+<title>Logarithmic log clock</title>
 <style>
     body {
         margin: 0;
@@ -15,7 +15,6 @@
 </style>
 </head>
 <body>
-
 <canvas id="clock"></canvas>
 
 <script>
@@ -48,11 +47,12 @@ function rotatePolygon(points, cx, cy, angle) {
 
 function drawScales(cx, cy, radius) {
     ctx.lineCap = "round";
-    ctx.font = `${radius*0.06}px Arial`;
+    ctx.font = `${radius * 0.06}px Arial`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    const bgColor = "#f4e3cb";
 
-    // Ulkokehä (1–60)
+    // Outer scale (1–60)
     for (let i = 1; i <= 60; i++) {
         const angle = Math.log(i) / Math.log(61) * 2 * Math.PI;
         const outerR = radius;
@@ -64,36 +64,27 @@ function drawScales(cx, cy, radius) {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.lineWidth = (i % 5 === 0 || i < 5) ? 2.5 : 1;
-
-//        ctx.fillStyle = "#f4e3cb";
-        
-//        ctx.fillText(h, tx-3, ty);
-//        ctx.fillText(h, tx, ty-3);
-//        ctx.fillText(h, tx+3, ty);
-//        ctx.fillText(h, tx, ty+3);
-//        ctx.fillText(h, tx-6, ty);
-//        ctx.fillText(h, tx, ty-6);
-//        ctx.fillText(h, tx+6, ty);
-//        ctx.fillText(h, tx, ty+6);
-//        ctx.fillText(h, tx-4.25, ty-4.25);
-//        ctx.fillText(h, tx-4.25, ty+4.25);
-//        ctx.fillText(h, tx+4.25, ty+4.25);
-//        ctx.fillText(h, tx+4.25, ty-4.25);
-        
         ctx.strokeStyle = "black";
         ctx.stroke();
 
-//        ctx.fillStyle = "black";
-//        ctx.fillText(h,tx,ty);
-        
         if (i !== 60 && (i % 5 === 0 || i < 5)) {
-            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius*0.13), cx, cy, angle);
+            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.13), cx, cy, angle);
+
+            const text = i.toString();
+            const metrics = ctx.measureText(text);
+            const padding = 4;
+            const rectWidth = metrics.width + padding * 2;
+            const rectHeight = radius * 0.06 + padding * 2;
+
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(tx - rectWidth / 2, ty - rectHeight / 2, rectWidth, rectHeight);
+
             ctx.fillStyle = "black";
-            ctx.fillText(i, tx, ty);
+            ctx.fillText(text, tx, ty);
         }
     }
 
-    // Sisäkehä (1–12)
+    // Inner scale (1–12)
     const innerScaleR = radius * 2/3;
     for (let h = 1; h <= 12; h++) {
         const angle = Math.log(h) / Math.log(13) * 2 * Math.PI;
@@ -109,28 +100,21 @@ function drawScales(cx, cy, radius) {
         ctx.strokeStyle = "#c04000";
         ctx.stroke();
 
-        const [tx, ty] = rotatePoint(cx, cy - (outerR + radius*0.06), cx, cy, angle);
-        ctx.fillStyle = "#f4e3cb";
-        
-        ctx.fillText(h, tx-3, ty);
-        ctx.fillText(h, tx, ty-3);
-        ctx.fillText(h, tx+3, ty);
-        ctx.fillText(h, tx, ty+3);
-        ctx.fillText(h, tx-6, ty);
-        ctx.fillText(h, tx, ty-6);
-        ctx.fillText(h, tx+6, ty);
-        ctx.fillText(h, tx, ty+6);
-        ctx.fillText(h, tx-4.25, ty-4.25);
-        ctx.fillText(h, tx-4.25, ty+4.25);
-        ctx.fillText(h, tx+4.25, ty+4.25);
-        ctx.fillText(h, tx+4.25, ty-4.25);
+        const [tx, ty] = rotatePoint(cx, cy - (outerR + radius * 0.06), cx, cy, angle);
+
+        const text = h.toString();
+        const metrics = ctx.measureText(text);
+        const padding = 4;
+        const rectWidth = metrics.width + padding * 2;
+        const rectHeight = radius * 0.06 + padding * 2;
+
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(tx - rectWidth / 2, ty - rectHeight / 2, rectWidth, rectHeight);
 
         ctx.fillStyle = "#c04000";
-        ctx.fillText(h, tx, ty);
-      
-        
-        
-        // Puolitunti
+        ctx.fillText(text, tx, ty);
+
+        // Half-hour tick
         const halfHour = h + 0.5;
         const angleHalf = Math.log(halfHour) / Math.log(13) * 2 * Math.PI;
         const [hx1, hy1] = rotatePoint(cx, cy - outerR, cx, cy, angleHalf);
@@ -157,6 +141,7 @@ function drawHand(points, cx, cy, angle, color) {
     ctx.stroke();
 }
 
+// Load background image
 const bgImage = new Image();
 bgImage.src = "log_cross-section.png";
 
@@ -167,14 +152,12 @@ function drawClock() {
     const cy = canvas.height / 2;
     const radius = Math.min(canvas.width, canvas.height) * 0.4;
 
-    // Taustakuva sellaisenaan
+    // Draw background image
     if (bgImage.complete) {
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
         ctx.clip();
-
-        ctx.imageSmoothingEnabled = true;
 
         const imgRatio = bgImage.width / bgImage.height;
         const targetDiameter = radius * 2;
@@ -192,24 +175,26 @@ function drawClock() {
         const dy = cy - drawHeight / 2;
 
         ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
+
         ctx.restore();
     }
 
-    // Kellon kehät
+    // Clock circles
     ctx.beginPath();
-    ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
-    ctx.lineWidth = 16;
-    ctx.strokeStyle = "#5c4033";
+    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "black";
     ctx.stroke();
 
     ctx.beginPath();
     ctx.arc(cx, cy, radius * 2/3 * 0.93, 0, 2 * Math.PI);
-    ctx.lineWidth = 4;
     ctx.strokeStyle = "#c04000";
     ctx.stroke();
 
+    // Draw scales
     drawScales(cx, cy, radius);
 
+    // Hand shapes
     const secShape = [cx, cy, cx, cy - radius*0.965];
     const minShape = [
         cx, cy + radius*0.03,
@@ -248,29 +233,3 @@ drawClock();
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
