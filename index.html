@@ -91,11 +91,14 @@ function drawScales(cx, cy, radius) {
         ctx.stroke();
 
         const [tx, ty] = rotatePoint(cx, cy - (outerR + radius*0.06), cx, cy, angle);
+        ctx.fillStyle = "#black";
+        ctx.fillText(h, tx-1, ty);
+        ctx.fillText(h, tx, ty-1);
+        ctx.fillText(h, tx+1, ty);
+        ctx.fillText(h, tx, ty+1);
         ctx.fillStyle = "#c04000";
         ctx.fillText(h, tx, ty);
-        ctx.fillStyle = "#black";
-        ctx.strokeText(h, tx, ty);
-        
+      
         
         
         // Puolitunti
@@ -216,6 +219,7 @@ drawClock();
 </script>
 </body>
 </html>
+
 
 
 
