@@ -91,7 +91,7 @@ function drawScales(cx, cy, radius) {
         ctx.stroke();
 
         const [tx, ty] = rotatePoint(cx, cy - (outerR + radius*0.06), cx, cy, angle);
-        ctx.fillStyle = "#f4e3cb";
+        ctx.fillStyle = "black";
         ctx.fillText(h, tx-5, ty);
         ctx.fillText(h, tx, ty-5);
         ctx.fillText(h, tx+5, ty);
@@ -218,6 +218,7 @@ drawClock();
 </script>
 </body>
 </html>
+
 
 
 
