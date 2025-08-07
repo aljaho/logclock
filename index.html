@@ -188,6 +188,7 @@ function drawClock() {
 
     ctx.beginPath();
     ctx.arc(cx, cy, radius * 2/3 * 0.93, 0, 2 * Math.PI);
+    ctx.lineWidth = 4;
     ctx.strokeStyle = "#c04000";
     ctx.stroke();
 
@@ -233,4 +234,5 @@ drawClock();
 </script>
 </body>
 </html>
+
 
