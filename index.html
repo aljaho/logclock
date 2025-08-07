@@ -96,6 +96,10 @@ function drawScales(cx, cy, radius) {
         ctx.fillText(h, tx, ty-2);
         ctx.fillText(h, tx+2, ty);
         ctx.fillText(h, tx, ty+2);
+        ctx.fillText(h, tx-4, ty);
+        ctx.fillText(h, tx, ty-4);
+        ctx.fillText(h, tx+4, ty);
+        ctx.fillText(h, tx, ty+4);
         ctx.fillStyle = "#c04000";
         ctx.fillText(h, tx, ty);
       
@@ -219,6 +223,7 @@ drawClock();
 </script>
 </body>
 </html>
+
 
 
 
