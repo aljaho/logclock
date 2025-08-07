@@ -69,7 +69,7 @@ function drawScales(cx, cy, radius) {
 
         if (i !== 60 && (i % 5 === 0 || i < 5)) {
             const [tx, ty] = rotatePoint(cx, cy - (outerR - radius*0.13), cx, cy, angle);
-            ctx.fillStyle = "black";
+            ctx.fillStyle = "5c4033";
             ctx.fillText(i, tx, ty);
         }
     }
@@ -211,5 +211,6 @@ drawClock();
 </script>
 </body>
 </html>
+
 
 
