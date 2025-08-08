@@ -39,21 +39,19 @@ function rotatePoint(x, y, cx, cy, angle) {
 
 function drawOuterScale(cx, cy, radius) {
     ctx.lineCap = "round";
-    ctx.font = `${radius * 0.12}px Arial`; // larger numbers
+    const hourFontSize = radius * 0.12;
+    const minuteFontSize = radius * 0.07;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const bgColor = "#f4e3cb";
 
-    // rotation so that 12 is at the top
     const rotationOffset = (1 - Math.log(12) / Math.log(13)) * 2 * Math.PI;
-
-    // draw marks and numbers every 0.2 units (numbers at integers)
     for (let t = 1; t < 13; t += 0.2) {
         const angle = Math.log(t) / Math.log(13) * 2 * Math.PI + rotationOffset;
         const outerR = radius;
         const innerR = radius - radius * 0.07;
 
-        // tick
+        // viivat
         ctx.beginPath();
         const [x1, y1] = rotatePoint(cx, cy - outerR, cx, cy, angle);
         const [x2, y2] = rotatePoint(cx, cy - innerR, cx, cy, angle);
@@ -63,26 +61,43 @@ function drawOuterScale(cx, cy, radius) {
         ctx.strokeStyle = "black";
         ctx.stroke();
 
-        // numbers (only integer t)
+        // tunnit ja minuutit
         if (Math.abs(t - Math.round(t)) < 0.001) {
-            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.16), cx, cy, angle); // pushed a bit inward
-            let text = Math.round(t).toString();
-            if (text === "13") text = "1"; // show 1 instead of 13
+            const hourNum = Math.round(t) === 13 ? 1 : Math.round(t);
 
-            const metrics = ctx.measureText(text);
-            const padding = 6; // slightly larger padding (scaled with text)
-            const rectWidth = metrics.width + padding * 2;
-            const rectHeight = radius * 0.12 + padding * 2; // scaled with font
+            // tuntinumero
+            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.16), cx, cy, angle);
+            ctx.font = `${hourFontSize}px Arial`;
+            const metricsH = ctx.measureText(hourNum.toString());
+            const paddingH = 4;
+            const rectWidthH = metricsH.width + paddingH * 2;
+            const rectHeightH = hourFontSize + paddingH * 2;
 
-            // elliptical background (light brown)
             ctx.fillStyle = bgColor;
             ctx.beginPath();
-            ctx.ellipse(tx, ty, rectWidth / 2, rectHeight / 2, 0, 0, 2 * Math.PI);
+            ctx.ellipse(tx, ty, rectWidthH / 2, rectHeightH / 2, 0, 0, 2 * Math.PI);
             ctx.fill();
 
-            // text
             ctx.fillStyle = "black";
-            ctx.fillText(text, tx, ty);
+            ctx.fillText(hourNum.toString(), tx, ty);
+
+            // minuuttiluku
+            let minuteValue = (hourNum % 12) * 5;
+            if (minuteValue === 0) minuteValue = 60;
+            const [tmx, tmy] = rotatePoint(cx, cy - (outerR - radius * 0.27), cx, cy, angle);
+            ctx.font = `${minuteFontSize}px Arial`;
+            const metricsM = ctx.measureText(minuteValue.toString());
+            const paddingM = 3;
+            const rectWidthM = metricsM.width + paddingM * 2;
+            const rectHeightM = minuteFontSize + paddingM * 2;
+
+            ctx.fillStyle = bgColor;
+            ctx.beginPath();
+            ctx.ellipse(tmx, tmy, rectWidthM / 2, rectHeightM / 2, 0, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = "black";
+            ctx.fillText(minuteValue.toString(), tmx, tmy);
         }
     }
 }
@@ -120,7 +135,7 @@ function drawClock() {
     const cy = canvas.height / 2;
     const radius = Math.min(canvas.width, canvas.height) * 0.4;
 
-    // background image clipped inside circle (if loaded)
+    // taustakuva
     if (bgImage.complete) {
         ctx.save();
         ctx.beginPath();
@@ -145,49 +160,44 @@ function drawClock() {
         ctx.restore();
     }
 
-    // draw outer (13-based) scale and numbers
+    // asteikko
     drawOuterScale(cx, cy, radius);
 
     const rotationOffset = (1 - Math.log(12) / Math.log(13)) * 2 * Math.PI;
 
-    // hands shapes (defined relative to center)
-    const secShape = [cx, cy, cx, cy - radius * 0.965];
+    // viisarien muodot
+    const secShape = [cx, cy, cx, cy - radius*0.965];
     const minShape = [
-        cx, cy + radius * 0.03,
-        cx + radius * 0.03, cy,
-        cx, cy - radius * 0.965,
-        cx - radius * 0.03, cy
+        cx, cy + radius*0.03,
+        cx + radius*0.03, cy,
+        cx, cy - radius*0.965,
+        cx - radius*0.03, cy
     ];
     const hourShape = [
-        cx, cy + radius * 0.03,
-        cx + radius * 0.03, cy,
-        cx, cy - radius * 0.65, // shorter hour hand
-        cx - radius * 0.03, cy
+        cx, cy + radius*0.03,
+        cx + radius*0.03, cy,
+        cx, cy - radius*0.65,
+        cx - radius*0.03, cy
     ];
 
     const now = new Date();
 
-    // seconds: map into 5..65 then log13(seconds/5)
     let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
     let seconds = rawSeconds < 5 ? rawSeconds + 60 : rawSeconds;
     const secAngle = Math.log(seconds / 5) / Math.log(13) * 2 * Math.PI + rotationOffset;
-    drawHand(secShape, cx, cy, secAngle, "black"); // second hand black
+    drawHand(secShape, cx, cy, secAngle, "black");
 
-    // minutes: map into 5..65 then log13(minutes/5)
     let rawMinutes = now.getMinutes() + rawSeconds / 60;
     let minutes = rawMinutes < 5 ? rawMinutes + 60 : rawMinutes;
     const minAngle = Math.log(minutes / 5) / Math.log(13) * 2 * Math.PI + rotationOffset;
     drawHand(minShape, cx, cy, minAngle, "black");
 
-    // hours: first correct hours so that if <1, add 12; then log13(hours)
     let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
-    let hours = (hoursRaw < 1) ? (hoursRaw + 12) : hoursRaw; // FIX: <1 (not <=0)
-    // safety: clamp very small positive values (shouldn't be needed but avoids log(<=0))
-    if (hours <= 0) hours += 12;
+    let hours = hoursRaw < 1 ? hoursRaw + 12 : hoursRaw;
     const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI + rotationOffset;
     drawHand(hourShape, cx, cy, hourAngle, "#c04000");
 
-    // outer decorative rim drawn last so it sits above some elements
+    // ulkokehys
     ctx.beginPath();
     ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
     ctx.lineWidth = 16;
