@@ -44,6 +44,7 @@ function drawOuterScale(cx, cy, radius) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const bgColor = "#f4e3cb";
+    const minuteColor = "#7e5f51";
 
     const rotationOffset = (1 - Math.log(12) / Math.log(13)) * 2 * Math.PI;
     for (let t = 1; t < 13; t += 0.2) {
@@ -65,8 +66,26 @@ function drawOuterScale(cx, cy, radius) {
         if (Math.abs(t - Math.round(t)) < 0.001) {
             const hourNum = Math.round(t) === 13 ? 1 : Math.round(t);
 
-            // tuntinumero
-            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.16), cx, cy, angle);
+            // minuuttiluku ulommalle (hieman lähemmäs kehää)
+            let minuteValue = (hourNum % 12) * 5;
+            if (minuteValue === 0) minuteValue = 60;
+            const [tmx, tmy] = rotatePoint(cx, cy - (outerR - radius * 0.12), cx, cy, angle);
+            ctx.font = `${minuteFontSize}px Arial`;
+            const metricsM = ctx.measureText(minuteValue.toString());
+            const paddingM = 3;
+            const rectWidthM = metricsM.width + paddingM * 2;
+            const rectHeightM = minuteFontSize + paddingM * 2;
+
+            ctx.fillStyle = bgColor;
+            ctx.beginPath();
+            ctx.ellipse(tmx, tmy, rectWidthM / 2, rectHeightM / 2, 0, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = minuteColor;
+            ctx.fillText(minuteValue.toString(), tmx, tmy);
+
+            // tuntinumero sisemmälle (myös ulommas kuin aiemmin)
+            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.24), cx, cy, angle);
             ctx.font = `${hourFontSize}px Arial`;
             const metricsH = ctx.measureText(hourNum.toString());
             const paddingH = 4;
@@ -80,24 +99,6 @@ function drawOuterScale(cx, cy, radius) {
 
             ctx.fillStyle = "black";
             ctx.fillText(hourNum.toString(), tx, ty);
-
-            // minuuttiluku
-            let minuteValue = (hourNum % 12) * 5;
-            if (minuteValue === 0) minuteValue = 60;
-            const [tmx, tmy] = rotatePoint(cx, cy - (outerR - radius * 0.27), cx, cy, angle);
-            ctx.font = `${minuteFontSize}px Arial`;
-            const metricsM = ctx.measureText(minuteValue.toString());
-            const paddingM = 3;
-            const rectWidthM = metricsM.width + paddingM * 2;
-            const rectHeightM = minuteFontSize + paddingM * 2;
-
-            ctx.fillStyle = bgColor;
-            ctx.beginPath();
-            ctx.ellipse(tmx, tmy, rectWidthM / 2, rectHeightM / 2, 0, 0, 2 * Math.PI);
-            ctx.fill();
-
-            ctx.fillStyle = "black";
-            ctx.fillText(minuteValue.toString(), tmx, tmy);
         }
     }
 }
@@ -185,17 +186,17 @@ function drawClock() {
     let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
     let seconds = rawSeconds < 5 ? rawSeconds + 60 : rawSeconds;
     const secAngle = Math.log(seconds / 5) / Math.log(13) * 2 * Math.PI + rotationOffset;
-    drawHand(secShape, cx, cy, secAngle, "black");
+    drawHand(secShape, cx, cy, secAngle, "#7e5f51");
 
     let rawMinutes = now.getMinutes() + rawSeconds / 60;
     let minutes = rawMinutes < 5 ? rawMinutes + 60 : rawMinutes;
     const minAngle = Math.log(minutes / 5) / Math.log(13) * 2 * Math.PI + rotationOffset;
-    drawHand(minShape, cx, cy, minAngle, "black");
+    drawHand(minShape, cx, cy, minAngle, "#7e5f51");
 
     let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
     let hours = hoursRaw < 1 ? hoursRaw + 12 : hoursRaw;
     const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI + rotationOffset;
-    drawHand(hourShape, cx, cy, hourAngle, "#c04000");
+    drawHand(hourShape, cx, cy, hourAngle, "black");
 
     // ulkokehys
     ctx.beginPath();
