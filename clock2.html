@@ -39,18 +39,21 @@ function rotatePoint(x, y, cx, cy, angle) {
 
 function drawOuterScale(cx, cy, radius) {
     ctx.lineCap = "round";
-    ctx.font = `${radius * 0.12}px Arial`; // suurempi fontti
+    ctx.font = `${radius * 0.12}px Arial`; // larger numbers
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const bgColor = "#f4e3cb";
 
+    // rotation so that 12 is at the top
     const rotationOffset = (1 - Math.log(12) / Math.log(13)) * 2 * Math.PI;
+
+    // draw marks and numbers every 0.2 units (numbers at integers)
     for (let t = 1; t < 13; t += 0.2) {
         const angle = Math.log(t) / Math.log(13) * 2 * Math.PI + rotationOffset;
         const outerR = radius;
         const innerR = radius - radius * 0.07;
 
-        // viivat
+        // tick
         ctx.beginPath();
         const [x1, y1] = rotatePoint(cx, cy - outerR, cx, cy, angle);
         const [x2, y2] = rotatePoint(cx, cy - innerR, cx, cy, angle);
@@ -60,22 +63,24 @@ function drawOuterScale(cx, cy, radius) {
         ctx.strokeStyle = "black";
         ctx.stroke();
 
-        // numerot ja taustasoirot
+        // numbers (only integer t)
         if (Math.abs(t - Math.round(t)) < 0.001) {
-            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.16), cx, cy, angle); // sisemmälle
+            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.16), cx, cy, angle); // pushed a bit inward
             let text = Math.round(t).toString();
-            if (text === "13") text = "1";
+            if (text === "13") text = "1"; // show 1 instead of 13
 
             const metrics = ctx.measureText(text);
-            const padding = 4;
+            const padding = 6; // slightly larger padding (scaled with text)
             const rectWidth = metrics.width + padding * 2;
-            const rectHeight = radius * 0.12 + padding * 2; // suhteessa fontin kokoon
+            const rectHeight = radius * 0.12 + padding * 2; // scaled with font
 
+            // elliptical background (light brown)
             ctx.fillStyle = bgColor;
             ctx.beginPath();
             ctx.ellipse(tx, ty, rectWidth / 2, rectHeight / 2, 0, 0, 2 * Math.PI);
             ctx.fill();
 
+            // text
             ctx.fillStyle = "black";
             ctx.fillText(text, tx, ty);
         }
@@ -115,7 +120,7 @@ function drawClock() {
     const cy = canvas.height / 2;
     const radius = Math.min(canvas.width, canvas.height) * 0.4;
 
-    // taustakuva
+    // background image clipped inside circle (if loaded)
     if (bgImage.complete) {
         ctx.save();
         ctx.beginPath();
@@ -140,44 +145,49 @@ function drawClock() {
         ctx.restore();
     }
 
-    // asteikko
+    // draw outer (13-based) scale and numbers
     drawOuterScale(cx, cy, radius);
 
     const rotationOffset = (1 - Math.log(12) / Math.log(13)) * 2 * Math.PI;
 
-    // viisarit
-    const secShape = [cx, cy, cx, cy - radius*0.965];
+    // hands shapes (defined relative to center)
+    const secShape = [cx, cy, cx, cy - radius * 0.965];
     const minShape = [
-        cx, cy + radius*0.03,
-        cx + radius*0.03, cy,
-        cx, cy - radius*0.965,
-        cx - radius*0.03, cy
+        cx, cy + radius * 0.03,
+        cx + radius * 0.03, cy,
+        cx, cy - radius * 0.965,
+        cx - radius * 0.03, cy
     ];
     const hourShape = [
-        cx, cy + radius*0.03,
-        cx + radius*0.03, cy,
-        cx, cy - radius*0.65,
-        cx - radius*0.03, cy
+        cx, cy + radius * 0.03,
+        cx + radius * 0.03, cy,
+        cx, cy - radius * 0.65, // shorter hour hand
+        cx - radius * 0.03, cy
     ];
 
     const now = new Date();
 
+    // seconds: map into 5..65 then log13(seconds/5)
     let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
     let seconds = rawSeconds < 5 ? rawSeconds + 60 : rawSeconds;
     const secAngle = Math.log(seconds / 5) / Math.log(13) * 2 * Math.PI + rotationOffset;
-    drawHand(secShape, cx, cy, secAngle, "black");
+    drawHand(secShape, cx, cy, secAngle, "black"); // second hand black
 
+    // minutes: map into 5..65 then log13(minutes/5)
     let rawMinutes = now.getMinutes() + rawSeconds / 60;
     let minutes = rawMinutes < 5 ? rawMinutes + 60 : rawMinutes;
     const minAngle = Math.log(minutes / 5) / Math.log(13) * 2 * Math.PI + rotationOffset;
     drawHand(minShape, cx, cy, minAngle, "black");
 
+    // hours: first correct hours so that if <1, add 12; then log13(hours)
     let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
-    let hours = hoursRaw <= 0 ? hoursRaw + 12 : hoursRaw;
+    let hours = (hoursRaw < 1) ? (hoursRaw + 12) : hoursRaw; // FIX: <1 (not <=0)
+    // safety: clamp very small positive values (shouldn't be needed but avoids log(<=0))
+    if (hours <= 0) hours += 12;
     const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI + rotationOffset;
     drawHand(hourShape, cx, cy, hourAngle, "#c04000");
 
-    // ulkokehys
+    // outer decorative rim drawn last so it sits above some elements
     ctx.beginPath();
     ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
     ctx.lineWidth = 16;
