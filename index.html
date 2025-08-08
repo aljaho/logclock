@@ -48,12 +48,12 @@ function rotatePolygon(points, cx, cy, angle) {
 
 function drawScales(cx, cy, radius) {
     ctx.lineCap = "round";
-    ctx.font = `${radius * 0.06}px Arial`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const bgColor = "#f4e3cb";
 
-    // Outer scale (minutes 1–60)
+    // Outer scale (minutes)
+    ctx.font = `${radius * 0.06}px Arial`;
     for (let i = 1; i <= 60; i++) {
         const angle = Math.log(i) / Math.log(61) * 2 * Math.PI;
         const outerR = radius;
@@ -65,12 +65,11 @@ function drawScales(cx, cy, radius) {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.lineWidth = (i % 5 === 0 || i < 5) ? 2.5 : 1;
-        ctx.strokeStyle = "#7e5f51"; // minuuttiasteikkojen väri
+        ctx.strokeStyle = "#7e5f51";
         ctx.stroke();
 
         if (i !== 60 && (i % 5 === 0 || i < 5)) {
             const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.13), cx, cy, angle);
-
             const text = i.toString();
             const metrics = ctx.measureText(text);
             const padding = 4;
@@ -82,12 +81,13 @@ function drawScales(cx, cy, radius) {
             ctx.ellipse(tx, ty, rectWidth / 2, rectHeight / 2, 0, 0, 2 * Math.PI);
             ctx.fill();
 
-            ctx.fillStyle = "#7e5f51"; // minuuttilukujen väri
+            ctx.fillStyle = "#7e5f51";
             ctx.fillText(text, tx, ty);
         }
     }
 
-    // Inner scale (hours 1–12)
+    // Inner scale (hours) — bigger font
+    ctx.font = `${radius * 0.085}px Arial`; // kasvatettu fonttikoko
     const innerScaleR = radius * 2/3;
     for (let h = 1; h <= 12; h++) {
         const angle = Math.log(h) / Math.log(13) * 2 * Math.PI;
@@ -100,23 +100,22 @@ function drawScales(cx, cy, radius) {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.lineWidth = 2.5;
-        ctx.strokeStyle = "black"; // tuntiasteikkojen väri
+        ctx.strokeStyle = "black";
         ctx.stroke();
 
         const [tx, ty] = rotatePoint(cx, cy - (outerR + radius * 0.06), cx, cy, angle);
-
         const text = h.toString();
         const metrics = ctx.measureText(text);
         const padding = 4;
         const rectWidth = metrics.width + padding * 2;
-        const rectHeight = radius * 0.06 + padding * 2;
+        const rectHeight = radius * 0.085 + padding * 2;
 
         ctx.fillStyle = bgColor;
         ctx.beginPath();
         ctx.ellipse(tx, ty, rectWidth / 2, rectHeight / 2, 0, 0, 2 * Math.PI);
         ctx.fill();
 
-        ctx.fillStyle = "black"; // tuntinumerot mustiksi
+        ctx.fillStyle = "black";
         ctx.fillText(text, tx, ty);
 
         // Half-hour tick
@@ -177,7 +176,6 @@ function drawClock() {
 
         const dx = cx - drawWidth / 2;
         const dy = cy - drawHeight / 2;
-
         ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
         ctx.restore();
     }
@@ -185,7 +183,7 @@ function drawClock() {
     ctx.beginPath();
     ctx.arc(cx, cy, radius * 2/3 * 0.93, 0, 2 * Math.PI);
     ctx.lineWidth = 4;
-    ctx.strokeStyle = "black"; // tuntikehän väri
+    ctx.strokeStyle = "black";
     ctx.stroke();
 
     drawScales(cx, cy, radius);
@@ -205,23 +203,18 @@ function drawClock() {
     ];
 
     const now = new Date();
-    
     let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
     let seconds = rawSeconds < 1 ? rawSeconds + 60 : rawSeconds;
-    const secAngle = Math.log(seconds) / Math.log(61) * 2 * Math.PI;
-    drawHand(secShape, cx, cy, secAngle, "#7e5f51"); // sekuntiviisari
+    drawHand(secShape, cx, cy, Math.log(seconds) / Math.log(61) * 2 * Math.PI, "#7e5f51");
 
     let rawMinutes = now.getMinutes() + rawSeconds / 60;
     let minutes = rawMinutes < 1 ? rawMinutes + 60 : rawMinutes;
-    const minAngle = Math.log(minutes) / Math.log(61) * 2 * Math.PI;
-    drawHand(minShape, cx, cy, minAngle, "#7e5f51"); // minuuttiviisari
+    drawHand(minShape, cx, cy, Math.log(minutes) / Math.log(61) * 2 * Math.PI, "#7e5f51");
 
     let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
     let hours = hoursRaw < 1 ? hoursRaw + 12 : hoursRaw;
-    const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI;
-    drawHand(hourShape, cx, cy, hourAngle, "black"); // tuntiviisari
+    drawHand(hourShape, cx, cy, Math.log(hours) / Math.log(13) * 2 * Math.PI, "black");
 
-    // Draw outermost circle after everything else
     ctx.beginPath();
     ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
     ctx.lineWidth = 16;
