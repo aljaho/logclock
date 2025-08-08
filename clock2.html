@@ -39,7 +39,7 @@ function rotatePoint(x, y, cx, cy, angle) {
 
 function drawOuterScale(cx, cy, radius) {
     ctx.lineCap = "round";
-    ctx.font = `${radius * 0.06}px Arial`;
+    ctx.font = `${radius * 0.12}px Arial`; // suurempi fontti
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const bgColor = "#f4e3cb";
@@ -50,6 +50,7 @@ function drawOuterScale(cx, cy, radius) {
         const outerR = radius;
         const innerR = radius - radius * 0.07;
 
+        // viivat
         ctx.beginPath();
         const [x1, y1] = rotatePoint(cx, cy - outerR, cx, cy, angle);
         const [x2, y2] = rotatePoint(cx, cy - innerR, cx, cy, angle);
@@ -59,15 +60,16 @@ function drawOuterScale(cx, cy, radius) {
         ctx.strokeStyle = "black";
         ctx.stroke();
 
+        // numerot ja taustasoirot
         if (Math.abs(t - Math.round(t)) < 0.001) {
-            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.13), cx, cy, angle);
+            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.16), cx, cy, angle); // sisemmälle
             let text = Math.round(t).toString();
-            if (text === "13") text = "1"; // muutetaan 13 -> 1
+            if (text === "13") text = "1";
 
             const metrics = ctx.measureText(text);
             const padding = 4;
             const rectWidth = metrics.width + padding * 2;
-            const rectHeight = radius * 0.06 + padding * 2;
+            const rectHeight = radius * 0.12 + padding * 2; // suhteessa fontin kokoon
 
             ctx.fillStyle = bgColor;
             ctx.beginPath();
@@ -113,7 +115,7 @@ function drawClock() {
     const cy = canvas.height / 2;
     const radius = Math.min(canvas.width, canvas.height) * 0.4;
 
-    // Taustakuva
+    // taustakuva
     if (bgImage.complete) {
         ctx.save();
         ctx.beginPath();
@@ -138,12 +140,12 @@ function drawClock() {
         ctx.restore();
     }
 
-    // Ulkokehä
+    // asteikko
     drawOuterScale(cx, cy, radius);
 
     const rotationOffset = (1 - Math.log(12) / Math.log(13)) * 2 * Math.PI;
 
-    // Viisareiden muodot
+    // viisarit
     const secShape = [cx, cy, cx, cy - radius*0.965];
     const minShape = [
         cx, cy + radius*0.03,
@@ -154,7 +156,7 @@ function drawClock() {
     const hourShape = [
         cx, cy + radius*0.03,
         cx + radius*0.03, cy,
-        cx, cy - radius*0.65, // lyhyempi tuntiviisari
+        cx, cy - radius*0.65,
         cx - radius*0.03, cy
     ];
 
@@ -163,7 +165,7 @@ function drawClock() {
     let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
     let seconds = rawSeconds < 5 ? rawSeconds + 60 : rawSeconds;
     const secAngle = Math.log(seconds / 5) / Math.log(13) * 2 * Math.PI + rotationOffset;
-    drawHand(secShape, cx, cy, secAngle, "black"); // sekuntiviisari musta
+    drawHand(secShape, cx, cy, secAngle, "black");
 
     let rawMinutes = now.getMinutes() + rawSeconds / 60;
     let minutes = rawMinutes < 5 ? rawMinutes + 60 : rawMinutes;
@@ -175,7 +177,7 @@ function drawClock() {
     const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI + rotationOffset;
     drawHand(hourShape, cx, cy, hourAngle, "#c04000");
 
-    // Ulompi kehys
+    // ulkokehys
     ctx.beginPath();
     ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
     ctx.lineWidth = 16;
