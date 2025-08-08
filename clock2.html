@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Logarithmic Log Clock</title>
+<link rel="icon" href="favicon.ico" type="image/x-icon" />
+<style>
+    body {
+        margin: 0;
+        background: white;
+        overflow: hidden;
+    }
+    canvas {
+        display: block;
+    }
+</style>
+</head>
+<body>
+<canvas id="clock"></canvas>
+
+<script>
+const canvas = document.getElementById("clock");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+function rotatePoint(x, y, cx, cy, angle) {
+    const dx = x - cx;
+    const dy = y - cy;
+    const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+    const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
+    return [cx + rx, cy + ry];
+}
+
+function drawOuterScale(cx, cy, radius) {
+    ctx.lineCap = "round";
+    ctx.font = `${radius * 0.06}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const bgColor = "#f4e3cb";
+
+    const rotationOffset = (1 - Math.log(12) / Math.log(13)) * 2 * Math.PI;
+    for (let t = 1; t < 13; t += 0.2) {
+        const angle = Math.log(t) / Math.log(13) * 2 * Math.PI + rotationOffset;
+        const outerR = radius;
+        const innerR = radius - radius * 0.07;
+
+        ctx.beginPath();
+        const [x1, y1] = rotatePoint(cx, cy - outerR, cx, cy, angle);
+        const [x2, y2] = rotatePoint(cx, cy - innerR, cx, cy, angle);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineWidth = (Math.abs(t - Math.round(t)) < 0.001) ? 2.5 : 1;
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+
+        if (Math.abs(t - Math.round(t)) < 0.001) {
+            const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.13), cx, cy, angle);
+            let text = Math.round(t).toString();
+            if (text === "13") text = "1"; // muutetaan 13 -> 1
+
+            const metrics = ctx.measureText(text);
+            const padding = 4;
+            const rectWidth = metrics.width + padding * 2;
+            const rectHeight = radius * 0.06 + padding * 2;
+
+            ctx.fillStyle = bgColor;
+            ctx.beginPath();
+            ctx.ellipse(tx, ty, rectWidth / 2, rectHeight / 2, 0, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = "black";
+            ctx.fillText(text, tx, ty);
+        }
+    }
+}
+
+function rotatePolygon(points, cx, cy, angle) {
+    const rotated = [];
+    for (let i = 0; i < points.length; i += 2) {
+        const [x, y] = rotatePoint(points[i], points[i+1], cx, cy, angle);
+        rotated.push(x, y);
+    }
+    return rotated;
+}
+
+function drawHand(points, cx, cy, angle, color) {
+    const rotated = rotatePolygon(points, cx, cy, angle);
+    ctx.beginPath();
+    ctx.moveTo(rotated[0], rotated[1]);
+    for (let i = 2; i < rotated.length; i += 2) {
+        ctx.lineTo(rotated[i], rotated[i+1]);
+    }
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.fill();
+    ctx.stroke();
+}
+
+const bgImage = new Image();
+bgImage.src = "log_cross-section.png";
+
+function drawClock() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    const radius = Math.min(canvas.width, canvas.height) * 0.4;
+
+    // Taustakuva
+    if (bgImage.complete) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+        ctx.clip();
+
+        const imgRatio = bgImage.width / bgImage.height;
+        const targetDiameter = radius * 2;
+        let drawWidth, drawHeight;
+
+        if (imgRatio > 1) {
+            drawHeight = targetDiameter;
+            drawWidth = targetDiameter * imgRatio;
+        } else {
+            drawWidth = targetDiameter;
+            drawHeight = targetDiameter / imgRatio;
+        }
+
+        const dx = cx - drawWidth / 2;
+        const dy = cy - drawHeight / 2;
+        ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
+        ctx.restore();
+    }
+
+    // Ulkokehä
+    drawOuterScale(cx, cy, radius);
+
+    const rotationOffset = (1 - Math.log(12) / Math.log(13)) * 2 * Math.PI;
+
+    // Viisareiden muodot
+    const secShape = [cx, cy, cx, cy - radius*0.965];
+    const minShape = [
+        cx, cy + radius*0.03,
+        cx + radius*0.03, cy,
+        cx, cy - radius*0.965,
+        cx - radius*0.03, cy
+    ];
+    const hourShape = [
+        cx, cy + radius*0.03,
+        cx + radius*0.03, cy,
+        cx, cy - radius*0.65, // lyhyempi tuntiviisari
+        cx - radius*0.03, cy
+    ];
+
+    const now = new Date();
+
+    let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
+    let seconds = rawSeconds < 5 ? rawSeconds + 60 : rawSeconds;
+    const secAngle = Math.log(seconds / 5) / Math.log(13) * 2 * Math.PI + rotationOffset;
+    drawHand(secShape, cx, cy, secAngle, "black"); // sekuntiviisari musta
+
+    let rawMinutes = now.getMinutes() + rawSeconds / 60;
+    let minutes = rawMinutes < 5 ? rawMinutes + 60 : rawMinutes;
+    const minAngle = Math.log(minutes / 5) / Math.log(13) * 2 * Math.PI + rotationOffset;
+    drawHand(minShape, cx, cy, minAngle, "black");
+
+    let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
+    let hours = hoursRaw <= 0 ? hoursRaw + 12 : hoursRaw;
+    const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI + rotationOffset;
+    drawHand(hourShape, cx, cy, hourAngle, "#c04000");
+
+    // Ulompi kehys
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
+    ctx.lineWidth = 16;
+    ctx.strokeStyle = "#5c4033";
+    ctx.stroke();
+
+    requestAnimationFrame(drawClock);
+}
+
+drawClock();
+</script>
+</body>
+</html>
