@@ -53,7 +53,7 @@ function drawScales(cx, cy, radius) {
     ctx.textBaseline = "middle";
     const bgColor = "#f4e3cb";
 
-    // Outer scale (1–60)
+    // Outer scale (minutes 1–60)
     for (let i = 1; i <= 60; i++) {
         const angle = Math.log(i) / Math.log(61) * 2 * Math.PI;
         const outerR = radius;
@@ -65,7 +65,7 @@ function drawScales(cx, cy, radius) {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.lineWidth = (i % 5 === 0 || i < 5) ? 2.5 : 1;
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = "#7e5f51"; // minuuttiasteikkojen väri
         ctx.stroke();
 
         if (i !== 60 && (i % 5 === 0 || i < 5)) {
@@ -82,12 +82,12 @@ function drawScales(cx, cy, radius) {
             ctx.ellipse(tx, ty, rectWidth / 2, rectHeight / 2, 0, 0, 2 * Math.PI);
             ctx.fill();
 
-            ctx.fillStyle = "black";
+            ctx.fillStyle = "#7e5f51"; // minuuttilukujen väri
             ctx.fillText(text, tx, ty);
         }
     }
 
-    // Inner scale (1–12)
+    // Inner scale (hours 1–12)
     const innerScaleR = radius * 2/3;
     for (let h = 1; h <= 12; h++) {
         const angle = Math.log(h) / Math.log(13) * 2 * Math.PI;
@@ -100,7 +100,7 @@ function drawScales(cx, cy, radius) {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.lineWidth = 2.5;
-        ctx.strokeStyle = "#c04000";
+        ctx.strokeStyle = "black"; // tuntiasteikkojen väri
         ctx.stroke();
 
         const [tx, ty] = rotatePoint(cx, cy - (outerR + radius * 0.06), cx, cy, angle);
@@ -116,7 +116,7 @@ function drawScales(cx, cy, radius) {
         ctx.ellipse(tx, ty, rectWidth / 2, rectHeight / 2, 0, 0, 2 * Math.PI);
         ctx.fill();
 
-        ctx.fillStyle = "#c04000";
+        ctx.fillStyle = "black"; // tuntinumerot mustiksi
         ctx.fillText(text, tx, ty);
 
         // Half-hour tick
@@ -128,6 +128,7 @@ function drawScales(cx, cy, radius) {
         ctx.moveTo(hx1, hy1);
         ctx.lineTo(hx2, hy2);
         ctx.lineWidth = 1;
+        ctx.strokeStyle = "black";
         ctx.stroke();
     }
 }
@@ -184,7 +185,7 @@ function drawClock() {
     ctx.beginPath();
     ctx.arc(cx, cy, radius * 2/3 * 0.93, 0, 2 * Math.PI);
     ctx.lineWidth = 4;
-    ctx.strokeStyle = "#c04000";
+    ctx.strokeStyle = "black"; // tuntikehän väri
     ctx.stroke();
 
     drawScales(cx, cy, radius);
@@ -208,19 +209,19 @@ function drawClock() {
     let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
     let seconds = rawSeconds < 1 ? rawSeconds + 60 : rawSeconds;
     const secAngle = Math.log(seconds) / Math.log(61) * 2 * Math.PI;
-    drawHand(secShape, cx, cy, secAngle, "black");
+    drawHand(secShape, cx, cy, secAngle, "#7e5f51"); // sekuntiviisari
 
     let rawMinutes = now.getMinutes() + rawSeconds / 60;
     let minutes = rawMinutes < 1 ? rawMinutes + 60 : rawMinutes;
     const minAngle = Math.log(minutes) / Math.log(61) * 2 * Math.PI;
-    drawHand(minShape, cx, cy, minAngle, "black");
+    drawHand(minShape, cx, cy, minAngle, "#7e5f51"); // minuuttiviisari
 
     let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
     let hours = hoursRaw < 1 ? hoursRaw + 12 : hoursRaw;
     const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI;
-    drawHand(hourShape, cx, cy, hourAngle, "#c04000");
+    drawHand(hourShape, cx, cy, hourAngle, "black"); // tuntiviisari
 
-    // Draw outermost circle *after* everything else
+    // Draw outermost circle after everything else
     ctx.beginPath();
     ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
     ctx.lineWidth = 16;
@@ -234,9 +235,3 @@ drawClock();
 </script>
 </body>
 </html>
-
-
-
-
-
-
