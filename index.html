@@ -87,7 +87,7 @@ function drawScales(cx, cy, radius) {
     }
 
     // Inner scale (hours) — bigger font
-    ctx.font = `${radius * 0.085}px Arial`; // kasvatettu fonttikoko
+    ctx.font = `${radius * 0.12}px Arial`; // kasvatettu fonttikoko
     const innerScaleR = radius * 2/3;
     for (let h = 1; h <= 12; h++) {
         const angle = Math.log(h) / Math.log(13) * 2 * Math.PI;
