@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <link rel="icon" href="favicon.ico" type="image/x-icon" />
@@ -91,7 +91,7 @@ function drawScales(cx, cy, radius) {
     }
 
     // Inner scale (hours)
-    ctx.font = `${radius * 0.085}px Arial`;
+    ctx.font = `${radius * 0.12}px Arial`;
     const innerScaleR = radius * 2/3;
     for (let h = 1; h <= 12; h++) {
         const angle = Math.log(h) / Math.log(13) * 2 * Math.PI + hourOffset;
