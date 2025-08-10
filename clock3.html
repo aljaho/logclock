@@ -68,11 +68,11 @@ function drawScales(cx, cy, radius) {
         const [x2, y2] = rotatePoint(cx, cy - innerR, cx, cy, angle);
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
-        ctx.lineWidth = (i % 5 === 0 || i < 5) ? 2.5 : 1;
+        ctx.lineWidth = (i % 5 === 0 || (i < 5 && i > 1)) ? 2.5 : 1;
         ctx.strokeStyle = "#7e5f51";
         ctx.stroke();
 
-        if (i !== 60 && (i % 5 === 0 || i < 5)) {
+        if (i !== 1 && (i % 5 === 0 || i < 5)) {
             const [tx, ty] = rotatePoint(cx, cy - (outerR - radius * 0.13), cx, cy, angle);
             const text = i.toString();
             const metrics = ctx.measureText(text);
