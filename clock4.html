@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fi">
 <head>
 <meta charset="UTF-8" />
@@ -197,9 +197,8 @@ function drawClock() {
 
     // Tuntiviisari sijoitettuna vastaaviin minuutteihin (5 min * tunti) log_61-asteikolla
     let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
-    let hoursInMinutes = hoursRaw * 5;
-    let hoursAdj = hoursInMinutes < 5 ? hoursInMinutes + 60 : hoursInMinutes;
-    const hourAngle = Math.log(hoursAdj) / Math.log(61) * 2 * Math.PI + rotationOffset;
+    let hoursAdj = hoursRaw < 0.2 ? hoursRaw + 1 : hoursRaw;
+    const hourAngle = Math.log(hoursAdj*5) / Math.log(61) * 2 * Math.PI + rotationOffset;
     drawHand(hourShape, cx, cy, hourAngle, "black");
 
     // ulkokehys
