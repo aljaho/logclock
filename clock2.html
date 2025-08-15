@@ -39,6 +39,7 @@ const bgColor    = localStorage.getItem("bgColor")   || params.get("bgColor")   
 const minColor   = localStorage.getItem("minColor")  || params.get("minColor")  || "#7e5f51";
 const hourColor  = localStorage.getItem("hourColor") || params.get("hourColor") || "#000000";
 const fontFamily = localStorage.getItem("fontFamily")|| params.get("fontFamily")|| "Arial";
+const scaleBorderColor = localStorage.getItem("scaleBorderColor") || params.get("scaleBorderColor") || "#000000";
 
 const pageBgColor = localStorage.getItem("pageBgColor") || "#f0f0f0";
 
@@ -48,6 +49,7 @@ localStorage.setItem("bgColor", bgColor);
 localStorage.setItem("minColor", minColor);
 localStorage.setItem("hourColor", hourColor);
 localStorage.setItem("fontFamily", fontFamily);
+localStorage.setItem("scaleBorderColor", scaleBorderColor);
 
 // --- Canvas setup ---
 const canvas = document.getElementById("clock");
@@ -246,7 +248,7 @@ function drawClock() {
     ctx.beginPath();
     ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
     ctx.lineWidth = 16;
-    ctx.strokeStyle = "#000000";
+    ctx.strokeStyle = scaleBorderColor;
     ctx.stroke();
 
     requestAnimationFrame(drawClock);

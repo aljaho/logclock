@@ -23,7 +23,6 @@
         text-decoration: none;
         color: black;
     }
-
 </style>
 </head>
 <body>
@@ -50,6 +49,7 @@ const bgColor = localStorage.getItem("bgColor") || "#f4e3cb";
 const minuteColor = localStorage.getItem("minColor") || "#7e5f51";
 const hourColor = localStorage.getItem("hourColor") || "black";
 const fontFamily = localStorage.getItem("fontFamily") || "Arial";
+const scaleBorderColor = localStorage.getItem("scaleBorderColor") || "black";
 // -------------------------------------
 
 function rotatePoint(x, y, cx, cy, angle) {
@@ -81,7 +81,7 @@ function drawOuterScale(cx, cy, radius) {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.lineWidth = m % 5 === 0 ? 2.5 : 1;
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = scaleBorderColor;
         ctx.stroke();
 
         if (m % 5 === 0) {
@@ -202,7 +202,7 @@ function drawClock() {
     ctx.beginPath();
     ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
     ctx.lineWidth = 16;
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = scaleBorderColor;
     ctx.stroke();
 
     requestAnimationFrame(drawClock);

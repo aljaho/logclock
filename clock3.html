@@ -43,6 +43,7 @@ let bgImageSrc = localStorage.getItem("bgImage") || "log_cross-section.png";
 let minColor = localStorage.getItem("minColor") || "#7e5f51";
 let hourColor = localStorage.getItem("hourColor") || "black";
 let fontFamily = localStorage.getItem("fontFamily") || "Arial";
+let scaleBorderColor = localStorage.getItem("scaleBorderColor") || "black"; // Lisätty
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -80,7 +81,7 @@ function drawOuterScale(cx, cy, radius) {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.lineWidth = (Math.abs(t - Math.round(t)) < 0.001) ? 2.5 : 1;
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = scaleBorderColor; // Muutettu
         ctx.stroke();
 
         if (Math.abs(t - Math.round(t)) < 0.001) {
@@ -214,11 +215,11 @@ function drawClock() {
     const hourAngle = Math.log(hours) / Math.log(13) * 2 * Math.PI + rotationOffset;
     drawHand(hourShape, cx, cy, hourAngle, hourColor);
 
-    // ulkokehys musta
+    // ulkokehys
     ctx.beginPath();
     ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
     ctx.lineWidth = 16;
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = scaleBorderColor; // Muutettu
     ctx.stroke();
 
     requestAnimationFrame(drawClock);
