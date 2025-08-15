@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Logarithmic Log Clock</title>
+<title>Logarithmic Clock</title>
 <style>
     body {
         margin: 0;
@@ -12,21 +12,45 @@
     canvas {
         display: block;
     }
+    #backButton {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #ddd;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 16px;
+        text-decoration: none;
+        color: black;
+    }
+
 </style>
 </head>
 <body>
+<a id="backButton" href="index.html">&#8592; Back</a>
 <canvas id="clock"></canvas>
 
 <script>
 const canvas = document.getElementById("clock");
 const ctx = canvas.getContext("2d");
 
+const pageBgColor = localStorage.getItem("pageBgColor") || "#f0f0f0";
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
+document.body.style.backgroundColor = pageBgColor;
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
+
+// --- Haetaan asetukset indexist� ---
+const bgWood = localStorage.getItem("bgWood") === "true";
+const bgColor = localStorage.getItem("bgColor") || "#f4e3cb";
+const minuteColor = localStorage.getItem("minColor") || "#7e5f51";
+const hourColor = localStorage.getItem("hourColor") || "black";
+const fontFamily = localStorage.getItem("fontFamily") || "Arial";
+// -------------------------------------
 
 function rotatePoint(x, y, cx, cy, angle) {
     const dx = x - cx;
@@ -42,10 +66,7 @@ function drawOuterScale(cx, cy, radius) {
     const minuteFontSize = radius * 0.07;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    const bgColor = "#f4e3cb";
-    const minuteColor = "#7e5f51";
 
-    // Minuuttiasteikko: 1..60, 60 ylhäällä
     const rotationOffset = (1 - Math.log(60) / Math.log(61)) * 2 * Math.PI;
 
     for (let m = 1; m <= 60; m++) {
@@ -60,42 +81,22 @@ function drawOuterScale(cx, cy, radius) {
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.lineWidth = m % 5 === 0 ? 2.5 : 1;
-        ctx.strokeStyle = minuteColor;
+        ctx.strokeStyle = "black";
         ctx.stroke();
 
         if (m % 5 === 0) {
-            // Minuuttinumero ulkokehälle
+            // Minuuttinumero
             const [mx, my] = rotatePoint(cx, cy - (outerR - radius * 0.13), cx, cy, angle);
-            ctx.font = `${minuteFontSize}px Arial`;
-            const metricsM = ctx.measureText(m.toString());
-            const paddingM = 3;
-            const rectWidthM = metricsM.width + paddingM * 2;
-            const rectHeightM = minuteFontSize + paddingM * 2;
-
-            ctx.fillStyle = bgColor;
-            ctx.beginPath();
-            ctx.ellipse(mx, my, rectWidthM / 2, rectHeightM / 2, 0, 0, 2 * Math.PI);
-            ctx.fill();
-
+            ctx.font = `${minuteFontSize}px ${fontFamily}`;
             ctx.fillStyle = minuteColor;
             ctx.fillText(m.toString(), mx, my);
 
-            // Tuntinumero sisemmälle
+            // Tuntinumero
             let hourNum = m / 5;
             if (hourNum === 0) hourNum = 12;
             const [hx, hy] = rotatePoint(cx, cy - (outerR - radius * 0.24), cx, cy, angle);
-            ctx.font = `${hourFontSize}px Arial`;
-            const metricsH = ctx.measureText(hourNum.toString());
-            const paddingH = 4;
-            const rectWidthH = metricsH.width + paddingH * 2;
-            const rectHeightH = hourFontSize + paddingH * 2;
-
-            ctx.fillStyle = bgColor;
-            ctx.beginPath();
-            ctx.ellipse(hx, hy, rectWidthH / 2, rectHeightH / 2, 0, 0, 2 * Math.PI);
-            ctx.fill();
-
-            ctx.fillStyle = "black";
+            ctx.font = `${hourFontSize}px ${fontFamily}`;
+            ctx.fillStyle = hourColor;
             ctx.fillText(hourNum.toString(), hx, hy);
         }
     }
@@ -124,10 +125,8 @@ function drawHand(points, cx, cy, angle, color) {
     ctx.stroke();
 }
 
-// --- Taustakuva kuten aiemmissa versioissa ---
 const bgImage = new Image();
 bgImage.src = "log_cross-section.png";
-// ---------------------------------------------
 
 function drawClock() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -136,13 +135,12 @@ function drawClock() {
     const cy = canvas.height / 2;
     const radius = Math.min(canvas.width, canvas.height) * 0.4;
 
-    // Taustakuva leikattuna kellon ympyrään
-    if (bgImage.complete) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-        ctx.clip();
-
+    // Taustan piirto
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+    ctx.clip();
+    if (bgWood && bgImage.complete) {
         const imgRatio = bgImage.width / bgImage.height;
         const targetDiameter = radius * 2;
         let drawWidth, drawHeight;
@@ -158,8 +156,11 @@ function drawClock() {
         const dx = cx - drawWidth / 2;
         const dy = cy - drawHeight / 2;
         ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
-        ctx.restore();
+    } else {
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(cx - radius, cy - radius, radius * 2, radius * 2);
     }
+    ctx.restore();
 
     // Asteikko
     drawOuterScale(cx, cy, radius);
@@ -182,30 +183,26 @@ function drawClock() {
     ];
 
     const now = new Date();
-
-    // Sekuntiviisari (log_61)
     let rawSeconds = now.getSeconds() + now.getMilliseconds() / 1000;
     let seconds = rawSeconds < 1 ? rawSeconds + 60 : rawSeconds;
     const secAngle = Math.log(seconds) / Math.log(61) * 2 * Math.PI + rotationOffset;
-    drawHand(secShape, cx, cy, secAngle, "#7e5f51");
+    drawHand(secShape, cx, cy, secAngle, minuteColor);
 
-    // Minuuttiviisari (log_61)
     let rawMinutes = now.getMinutes() + rawSeconds / 60;
     let minutes = rawMinutes < 1 ? rawMinutes + 60 : rawMinutes;
     const minAngle = Math.log(minutes) / Math.log(61) * 2 * Math.PI + rotationOffset;
-    drawHand(minShape, cx, cy, minAngle, "#7e5f51");
+    drawHand(minShape, cx, cy, minAngle, minuteColor);
 
-    // Tuntiviisari sijoitettuna vastaaviin minuutteihin (5 min * tunti) log_61-asteikolla
     let hoursRaw = (now.getHours() % 12) + rawMinutes / 60;
     let hoursAdj = hoursRaw < 0.2 ? hoursRaw + 1 : hoursRaw;
     const hourAngle = Math.log(hoursAdj*5) / Math.log(61) * 2 * Math.PI + rotationOffset;
-    drawHand(hourShape, cx, cy, hourAngle, "black");
+    drawHand(hourShape, cx, cy, hourAngle, hourColor);
 
-    // ulkokehys
+    // Ulkokehys
     ctx.beginPath();
     ctx.arc(cx, cy, radius + 6, 0, 2 * Math.PI);
     ctx.lineWidth = 16;
-    ctx.strokeStyle = "#5c4033";
+    ctx.strokeStyle = "black";
     ctx.stroke();
 
     requestAnimationFrame(drawClock);
@@ -215,4 +212,3 @@ drawClock();
 </script>
 </body>
 </html>
-
